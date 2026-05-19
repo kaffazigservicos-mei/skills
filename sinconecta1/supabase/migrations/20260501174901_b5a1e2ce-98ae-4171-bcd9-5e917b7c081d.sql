@@ -1,0 +1,1 @@
+CREATE POLICY "Anyone can update profissionais" ON public.profissionais FOR UPDATE USING (true) WITH CHECK (true);
