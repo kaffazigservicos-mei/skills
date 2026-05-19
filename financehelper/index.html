@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Reserva Financeira</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f4f8 100%);
+            padding: 20px;
+            color: #334155;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .input-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-box label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .input-box .description {
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-left: 3px solid #3b82f6;
+            border-radius: 4px;
+        }
+
+        .input-box input {
+            padding: 12px 14px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            background: white;
+        }
+
+        .input-box input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 180px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-calculate {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-preview {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            display: none;
+        }
+
+        .btn-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-pdf {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
+            display: none;
+        }
+
+        .btn-pdf:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.4);
+        }
+
+        .preview-area {
+            display: none;
+            margin-top: 40px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert {
+            padding: 18px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 30px;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+
+        .alert.success {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: #16a34a;
+        }
+
+        .alert.warning {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #dc2626;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #f8fafc 0%, white 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .result-card .label {
+            font-size: 12px;
+            color: #475569;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .result-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        .visualization-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .visualization-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .table-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #0f172a;
+            padding: 16px 20px;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .results-table thead {
+            background: #f1f5f9;
+            position: sticky;
+            top: 50px;
+            z-index: 9;
+        }
+
+        .results-table th {
+            padding: 12px 16px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 12px;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .results-table th:first-child {
+            text-align: left;
+        }
+
+        .results-table td {
+            padding: 12px 16px;
+            text-align: right;
+            font-size: 13px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 500;
+        }
+
+        .results-table td:first-child {
+            text-align: left;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .results-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .results-table tbody tr:nth-child(even) {
+            background: rgba(248, 250, 252, 0.5);
+        }
+
+        .value-positive {
+            color: #16a34a;
+        }
+
+        .value-negative {
+            color: #dc2626;
+        }
+
+        .parametros-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .parametros-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+
+        .parametros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .parametro-item {
+            font-size: 12px;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .parametro-item .label {
+            color: #475569;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .parametro-item .value {
+            color: #2563eb;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .explanations-section {
+            margin-top: 30px;
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, #f8fafc 100%);
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .explanations-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 16px;
+        }
+
+        .explanation-item {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .explanation-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .explanation-item strong {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .explanation-item p {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #475569;
+            margin-top: 4px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+
+            .header {
+                padding: 24px 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            button {
+                min-width: auto;
+            }
+
+            .visualization-section {
+                grid-template-columns: 1fr;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Simulador de Reserva Financeira</h1>
+        <p>Monte cenários para atingir seus sonhos</p>
+    </div>
+
+    <div class="content">
+        <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+            <h3 style="font-size: 16px; font-weight: 600; color: #0f172a; margin-bottom: 12px;">Como Usar</h3>
+            <ol style="margin: 0; padding-left: 20px; color: #475569; font-size: 14px; line-height: 1.8;">
+                <li style="margin-bottom: 8px;">Preencha os parâmetros - Insira os valores nos campos abaixo com suas informações financeiras</li>
+                <li style="margin-bottom: 8px;">Clique em Calcular Simulação - O sistema processará seus dados e exibirá os resultados</li>
+                <li>Visualize e exporte - Use Visualizar Preview para ver na tela ou Gerar Relatório PDF para baixar o documento</li>
+            </ol>
+        </div>
+
+        <div class="input-section">
+            <div class="section-title">Parâmetros de Simulação</div>
+
+            <div class="input-grid">
+                <div class="input-box">
+                    <label for="s0">💰 Saldo Inicial</label>
+                    <div class="description">O montante total que você já possui guardado hoje para este objetivo específico. Este é o ponto de partida da sua reserva.</div>
+                    <input type="number" id="s0" value="10000.00" step="0.01">
+                </div>
+
+                <div class="input-box">
+                    <label for="gm">📊 Gasto Mensal</label>
+                    <div class="description">A soma de todas as suas despesas fixas e variáveis essenciais para viver um mês (aluguel, alimentação, contas, etc).</div>
+                    <input type="number" id="gm" value="3000.00" step="0.01">
+                </div>
+
+                <div class="input-box">
+                    <label for="mt">🎯 Meta (Meses)</label>
+                    <div class="description">O nível de proteção desejado em meses de cobertura total (ex: 6 meses = 6x seu gasto mensal guardado).</div>
+                    <input type="number" id="mt" value="6" step="1">
+                </div>
+
+                <div class="input-box">
+                    <label for="ap">📈 Aporte Mensal</label>
+                    <div class="description">O valor que você consegue economizar e investir mensalmente para construir a reserva de emergência.</div>
+                    <input type="number" id="ap" value="500.00" step="0.01">
+                </div>
+
+                <div class="input-box">
+                    <label for="ra">💹 Rentabilidade Líquida Anual</label>
+                    <div class="description">Taxa de juros anual esperada da aplicação (ex: CDI, Selic ou fundo de renda fixa), já descontados os impostos e taxas.</div>
+                    <input type="number" id="ra" value="10.00" step="0.1">
+                </div>
+
+                <div class="input-box">
+                    <label for="ia">📉 Inflação Estimada Anual</label>
+                    <div class="description">Projeção da inflação (IPCA) para reajustar o seu custo de vida e a meta ao longo do tempo.</div>
+                    <input type="number" id="ia" value="4.50" step="0.1">
+                </div>
+            </div>
+        </div>
+
+        <div class="button-row">
+            <button class="btn-calculate" onclick="calcular()">📊 Calcular Simulação</button>
+            <button class="btn-preview" id="btnPreview" onclick="mostrarPreview()">👁️ Visualizar Preview</button>
+            <button class="btn-pdf" id="btnExport" onclick="gerarPDF()">📄 Gerar Relatório PDF</button>
+        </div>
+
+        <div class="preview-area" id="previewArea">
+            <div id="statusAlert" class="alert"></div>
+
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="label">Meta Financeira</div>
+                    <div class="value" id="resultMeta">R$ 0,00</div>
+                </div>
+                <div class="result-card">
+                    <div class="label">Mês de Atingimento</div>
+                    <div class="value" id="resultMes">-</div>
+                </div>
+                <div class="result-card">
+                    <div class="label">Saldo Final</div>
+                    <div class="value" id="resultSaldo">R$ 0,00</div>
+                </div>
+            </div>
+
+            <div class="visualization-section">
+                <div class="chart-container">
+                    <canvas id="graficoPreview"></canvas>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-title">📋 Projeção Mês a Mês</div>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Mês</th>
+                                <th>Saldo (R$)</th>
+                                <th>Meta Ajustada (R$)</th>
+                                <th>Diferença (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaResultados">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="parametros-section">
+                <h3>📋 Parâmetros Utilizados na Simulação</h3>
+                <div class="parametros-grid">
+                    <div class="parametro-item">
+                        <div class="label">Saldo Inicial</div>
+                        <div class="value" id="paramS0">R$ 0,00</div>
+                    </div>
+                    <div class="parametro-item">
+                        <div class="label">Gasto Mensal</div>
+                        <div class="value" id="paramGM">R$ 0,00</div>
+                    </div>
+                    <div class="parametro-item">
+                        <div class="label">Meta (Meses)</div>
+                        <div class="value" id="paramMT">0</div>
+                    </div>
+                    <div class="parametro-item">
+                        <div class="label">Aporte Mensal</div>
+                        <div class="value" id="paramAP">R$ 0,00</div>
+                    </div>
+                    <div class="parametro-item">
+                        <div class="label">Rentabilidade Anual</div>
+                        <div class="value" id="paramRA">0%</div>
+                    </div>
+                    <div class="parametro-item">
+                        <div class="label">Inflação Anual</div>
+                        <div class="value" id="paramIA">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="explanations-section">
+                <h3>📚 Interpretação dos Resultados</h3>
+                <div id="explanations"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let chartObj = null;
+    let ultimosDados = null;
+
+    const moeda = (v) => {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(v);
+    };
+
+    function calcular() {
+        const s0 = parseFloat(document.getElementById('s0').value) || 0;
+        const gm = parseFloat(document.getElementById('gm').value) || 0;
+        const mt = parseFloat(document.getElementById('mt').value) || 0;
+        const ap = parseFloat(document.getElementById('ap').value) || 0;
+        const raAnual = parseFloat(document.getElementById('ra').value) || 0;
+        const iaAnual = parseFloat(document.getElementById('ia').value) || 0;
+
+        const taxaRMensal = Math.pow(1 + raAnual / 100, 1 / 12) - 1;
+        const taxaIMensal = Math.pow(1 + iaAnual / 100, 1 / 12) - 1;
+
+        let saldo = s0;
+        let mesAtingido = null;
+        let labels = [];
+        let saldoData = [];
+        let metaData = [];
+        let tabelaHtml = "";
+        let tabelaPdfHtml = "";
+
+        for (let i = 1; i <= 120; i++) {
+            let metaCorrigida = (gm * mt) * Math.pow(1 + taxaIMensal, i);
+            saldo = (saldo * (1 + taxaRMensal)) + ap;
+
+            labels.push(`M${i}`);
+            saldoData.push(saldo.toFixed(2));
+            metaData.push(metaCorrigida.toFixed(2));
+
+            if (saldo >= metaCorrigida && mesAtingido === null) {
+                mesAtingido = i;
+            }
+
+            if (!mesAtingido || i <= mesAtingido) {
+                let diferenca = saldo - metaCorrigida;
+                let classDiferenca = diferenca >= 0 ? 'value-positive' : 'value-negative';
+                
+                tabelaHtml += `<tr>
+                    <td>${i}</td>
+                    <td>${moeda(saldo)}</td>
+                    <td>${moeda(metaCorrigida)}</td>
+                    <td class="${classDiferenca}">${moeda(diferenca)}</td>
+                </tr>`;
+
+                tabelaPdfHtml += `<tr><td style="border: 1px solid #999; padding: 3px; font-size: 8px;">${i}</td><td style="border: 1px solid #999; padding: 3px; text-align: right; font-size: 8px;">${moeda(saldo)}</td><td style="border: 1px solid #999; padding: 3px; text-align: right; font-size: 8px;">${moeda(metaCorrigida)}</td><td style="border: 1px solid #999; padding: 3px; text-align: right; font-size: 8px;">${moeda(diferenca)}</td></tr>`;
+            }
+
+            if (mesAtingido && i > mesAtingido) break;
+        }
+
+        ultimosDados = {
+            s0, gm, mt, ap, raAnual, iaAnual,
+            mesAtingido,
+            metaFinal: (gm * mt) * Math.pow(1 + taxaIMensal, mesAtingido || 120),
+            saldoFinal: saldo,
+            labels,
+            saldoData,
+            metaData,
+            tabelaPdfHtml
+        };
+
+        atualizarInterface(mesAtingido, saldo, gm, mt, taxaIMensal, tabelaHtml, s0, ap, raAnual, iaAnual);
+        criarGrafico(labels, saldoData, metaData);
+
+        document.getElementById('previewArea').style.display = 'block';
+        document.getElementById('btnPreview').style.display = 'inline-flex';
+        document.getElementById('btnExport').style.display = 'inline-flex';
+
+        setTimeout(() => {
+            document.getElementById('previewArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+
+    function atualizarInterface(mesAtingido, saldoFinal, gm, mt, taxaIMensal, tabelaHtml, s0, ap, raAnual, iaAnual) {
+        const metaFinal = (gm * mt) * Math.pow(1 + taxaIMensal, mesAtingido || 120);
+        
+        document.getElementById('resultMeta').textContent = moeda(metaFinal);
+        document.getElementById('resultMes').textContent = mesAtingido ? `${mesAtingido} meses` : 'Não atingida';
+        document.getElementById('resultSaldo').textContent = moeda(saldoFinal);
+
+        document.getElementById('paramS0').textContent = moeda(s0);
+        document.getElementById('paramGM').textContent = moeda(gm);
+        document.getElementById('paramMT').textContent = mt;
+        document.getElementById('paramAP').textContent = moeda(ap);
+        document.getElementById('paramRA').textContent = raAnual.toFixed(2) + '%';
+        document.getElementById('paramIA').textContent = iaAnual.toFixed(2) + '%';
+
+        document.getElementById('tabelaResultados').innerHTML = tabelaHtml;
+
+        const statusAlert = document.getElementById('statusAlert');
+        if (mesAtingido) {
+            if (mesAtingido > mt * 4) {
+                statusAlert.className = 'alert warning';
+                statusAlert.innerHTML = `⚠️ ALERTA: Meta atingida no mês ${mesAtingido}. O tempo de formação é muito longo. Considere aumentar os aportes mensais.`;
+            } else {
+                statusAlert.className = 'alert success';
+                statusAlert.innerHTML = `✅ SUCESSO: Meta de ${mt} meses atingida no mês ${mesAtingido}. Plano viável!`;
+            }
+        } else {
+            statusAlert.className = 'alert warning';
+            statusAlert.innerHTML = `⚠️ ALERTA: Meta não atingida nos próximos 10 anos. Revise os aportes mensais.`;
+        }
+
+        atualizarExplicacoes(mesAtingido, mt, gm, saldoFinal, metaFinal);
+    }
+
+    function atualizarExplicacoes(mesAtingido, mt, gm, saldoFinal, metaFinal) {
+        let html = '';
+
+        html += `<div class="explanation-item">
+            <strong>Meta Financeira:</strong>
+            <p>Você precisa acumular ${moeda(metaFinal)} para ter ${mt} meses de proteção com seu gasto mensal de ${moeda(gm)}.</p>
+        </div>`;
+
+        if (mesAtingido) {
+            const meses = Math.floor(mesAtingido / 12);
+            const mesesRest = mesAtingido % 12;
+            let tempoFormatado = '';
+            if (meses > 0) tempoFormatado += `${meses} ano${meses > 1 ? 's' : ''} `;
+            if (mesesRest > 0) tempoFormatado += `${mesesRest} mês${mesesRest > 1 ? 'es' : ''}`;
+
+            html += `<div class="explanation-item">
+                <strong>Tempo de Atingimento:</strong>
+                <p>Você atingirá a meta em ${tempoFormatado} (mês ${mesAtingido}). Seu saldo será de ${moeda(saldoFinal)}.</p>
+            </div>`;
+        }
+
+        html += `<div class="explanation-item">
+            <strong>Sobre a Inflação:</strong>
+            <p>A meta é ajustada mensalmente pela inflação estimada para manter o poder de compra.</p>
+        </div>`;
+
+        document.getElementById('explanations').innerHTML = html;
+    }
+
+    function criarGrafico(labels, saldoData, metaData) {
+        const ctx = document.getElementById('graficoPreview').getContext('2d');
+        
+        if (chartObj) chartObj.destroy();
+
+        chartObj = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Saldo Acumulado (R$)',
+                        data: saldoData,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.05)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    },
+                    {
+                        label: 'Meta Corrigida (R$)',
+                        data: metaData,
+                        borderColor: '#dc2626',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: { font: { size: 11 }, padding: 15 }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 10,
+                        titleFont: { size: 11 },
+                        bodyFont: { size: 10 },
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + moeda(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + (value / 1000).toFixed(0) + 'k';
+                            },
+                            font: { size: 10 }
+                        },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 9 } }
+                    }
+                },
+                animation: {
+                    onComplete: function() {
+                        if (chartObj) {
+                            const imgChart = chartObj.toBase64Image();
+                            ultimosDados.chartImage = imgChart;
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function mostrarPreview() {
+        document.getElementById('previewArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function gerarPDF() {
+        if (!ultimosDados) {
+            alert('Por favor, calcule a simulação primeiro.');
+            return;
+        }
+
+        const s0 = ultimosDados.s0;
+        const gm = ultimosDados.gm;
+        const mt = ultimosDados.mt;
+        const ap = ultimosDados.ap;
+        const raAnual = ultimosDados.raAnual;
+        const iaAnual = ultimosDados.iaAnual;
+        const mesAtingido = ultimosDados.mesAtingido;
+        const metaFinal = ultimosDados.metaFinal;
+        const saldoFinal = ultimosDados.saldoFinal;
+        const chartImage = ultimosDados.chartImage || '';
+        const tabelaHtml = ultimosDados.tabelaPdfHtml || '';
+
+        const statusText = mesAtingido 
+            ? (mesAtingido > mt * 4 
+                ? `ALERTA: Meta atingida no mês ${mesAtingido}. O tempo de formação é muito longo.`
+                : `SUCESSO: Meta de ${mt} meses atingida no mês ${mesAtingido}. Plano viável.`)
+            : `ALERTA: Meta não atingida nos próximos 10 anos.`;
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        let yPosition = 15;
+        const pageHeight = 297;
+        const bottomMargin = 25;
+        const lineHeight = 5;
+        const pageWidth = 210;
+
+        function addFooter() {
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'bold');
+            doc.setDrawColor(37, 99, 235);
+            doc.line(15, pageHeight - bottomMargin + 3, pageWidth - 15, pageHeight - bottomMargin + 3);
+            doc.text('Dilma Balbi & Manus & Gemini | fev/26 rev 0', pageWidth / 2, pageHeight - 8, { align: 'center' });
+        }
+
+        function checkPageBreak(height) {
+            if (yPosition + height > pageHeight - bottomMargin) {
+                addFooter();
+                doc.addPage();
+                yPosition = 15;
+            }
+        }
+
+        // PÁGINA 1: CAMPOS E EXPLICAÇÕES
+        doc.setFontSize(20);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(30, 58, 138);
+        doc.text('Simulador de Reserva Financeira', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 10;
+
+        doc.setFontSize(11);
+        doc.setTextColor(102, 102, 102);
+        doc.setFont(undefined, 'normal');
+        doc.text('Monte cenários para atingir seus sonhos', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 10;
+
+        doc.setDrawColor(37, 99, 235);
+        doc.line(15, yPosition, pageWidth - 15, yPosition);
+        yPosition += 8;
+
+        doc.setFontSize(13);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(37, 99, 235);
+        doc.text('Parâmetros de Simulação', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 12;
+
+        const campos = [
+            { label: '1. Saldo Inicial: ' + moeda(s0), desc: 'O montante total que você já possui guardado hoje para este objetivo específico.' },
+            { label: '2. Gasto Mensal: ' + moeda(gm), desc: 'A soma de todas as suas despesas fixas e variáveis essenciais para viver um mês.' },
+            { label: '3. Meta (Meses): ' + mt, desc: 'O nível de proteção desejado em meses de cobertura total.' },
+            { label: '4. Aporte Mensal: ' + moeda(ap), desc: 'O valor que você consegue economizar e investir mensalmente.' },
+            { label: '5. Rentabilidade Líquida Anual: ' + raAnual.toFixed(2) + '%', desc: 'Taxa de juros anual esperada da aplicação, já descontados os impostos.' },
+            { label: '6. Inflação Estimada Anual: ' + iaAnual.toFixed(2) + '%', desc: 'Projeção da inflação (IPCA) para reajustar o seu custo de vida.' }
+        ];
+
+        campos.forEach(campo => {
+            checkPageBreak(14);
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(30, 58, 138);
+            doc.text(campo.label, 15, yPosition);
+            yPosition += 6;
+
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(102, 102, 102);
+            const descLines = doc.splitTextToSize(campo.desc, pageWidth - 30);
+            doc.text(descLines, 15, yPosition);
+            yPosition += descLines.length * 4 + 4;
+        });
+
+        checkPageBreak(15);
+        const alertBg = mesAtingido && mesAtingido > mt * 4 ? [254, 242, 242] : [240, 253, 244];
+        const alertBorder = mesAtingido && mesAtingido > mt * 4 ? [220, 38, 38] : [22, 163, 74];
+        doc.setFillColor(...alertBg);
+        doc.rect(15, yPosition - 3, pageWidth - 30, 12, 'F');
+        doc.setDrawColor(...alertBorder);
+        doc.setLineWidth(1);
+        doc.line(15, yPosition - 3, 15, yPosition + 9);
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...alertBorder);
+        doc.text(statusText, 18, yPosition + 3);
+        yPosition += 15;
+
+        checkPageBreak(12);
+        doc.setFontSize(13);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(37, 99, 235);
+        doc.text('Resultados da Simulação', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 12;
+
+        const resultados = [
+            { label: 'Meta Financeira', value: moeda(metaFinal) },
+            { label: 'Mês de Atingimento', value: mesAtingido ? mesAtingido + ' meses' : 'Não atingida' },
+            { label: 'Saldo Final', value: moeda(saldoFinal) }
+        ];
+
+        resultados.forEach(res => {
+            checkPageBreak(8);
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(0, 0, 0);
+            doc.text(res.label, 15, yPosition);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(37, 99, 235);
+            doc.text(res.value, pageWidth - 15, yPosition, { align: 'right' });
+            yPosition += 8;
+        });
+
+        addFooter();
+
+        // PÁGINA 2: GRÁFICO
+        doc.addPage();
+        yPosition = 15;
+
+        doc.setFontSize(18);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(30, 58, 138);
+        doc.text('Gráfico de Projeção', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 12;
+
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(102, 102, 102);
+        doc.text('Evolução do Saldo vs Meta ao Longo do Tempo', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 10;
+
+        if (chartImage) {
+            const imgWidth = pageWidth - 30;
+            const imgHeight = 100;
+            doc.addImage(chartImage, 'PNG', 15, yPosition, imgWidth, imgHeight);
+            yPosition += imgHeight + 10;
+        }
+
+        addFooter();
+
+        // PÁGINA 3: TABELA
+        doc.addPage();
+        yPosition = 15;
+
+        doc.setFontSize(18);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(30, 58, 138);
+        doc.text('Projeção Detalhada Mensal', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 12;
+
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(102, 102, 102);
+        doc.text('Evolução do Saldo Patrimonial em relação a Meta', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 10;
+
+        // Criar tabela com autoTable
+        const tableData = tabelaHtml.split('<tr>').slice(1).map(row => {
+            const cells = [];
+            const cellMatches = row.match(/>([^<]*)</g);
+            if (cellMatches) {
+                cellMatches.forEach(match => {
+                    let content = match.substring(1, match.length - 1).trim();
+                    if (content) cells.push(content);
+                });
+            }
+            return cells.length > 0 ? cells : [];
+        }).filter(row => row.length > 0);
+
+        if (tableData.length > 0) {
+            doc.autoTable({
+                head: [['Mês', 'Saldo (R$)', 'Meta Ajustada (R$)', 'Diferença (R$)']],
+                body: tableData,
+                startY: yPosition,
+                margin: { left: 15, right: 15 },
+                styles: { fontSize: 8, cellPadding: 2 },
+                headStyles: { fillColor: [241, 245, 249], textColor: [0, 0, 0], fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                didDrawPage: function(data) {
+                    // Rodapé será adicionado manualmente
+                }
+            });
+        }
+
+        addFooter();
+
+        doc.save('Relatorio_Reserva_Financeira.pdf');
+    }
+</script>
+
+</body>
+</html>

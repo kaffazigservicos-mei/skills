@@ -1,0 +1,15 @@
+{
+  "name": "Calculadora de Reserva de Emergência",
+  "short_name": "Reserva",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
