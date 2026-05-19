@@ -259,5 +259,40 @@ Siga a sequência metodológica abaixo para implantar a aplicação de maneira i
 ## 🔒 Governança de Código
 
 Este diretório funciona como uma biblioteca estática para distribuição e replicação. O ambiente de produção ativo no GitHub Pages permanece isolado e protegido, garantindo a integridade operacional da solução principal de simulação.
+
+# Analisador de Gastos — Skill Replicável
+
+Este diretório contém o instantâneo (*snapshot*) estrutural do projeto **Analisador de Gastos**, configurado como uma habilidade independente para replicação e implantação autônoma.
+
+---
+
+## 🎯 Objetivo do Aplicativo
+
+O **Analisador de Gastos** é uma solução de inteligência financeira projetada para realizar o mapeamento, categorização e auditoria de fluxos de saída de capital. O sistema processa os registros fornecidos pelo usuário, gerando relatórios consolidados e métricas visuais que facilitam a identificação de gargalos orçamentários, apoiando o planejamento estratégico e a otimização de recursos.
+
+---
+
+## 🌐 Endereço de Acesso
+
+O fluxo de desenvolvimento ativo desta solução encontra-se centralizado no repositório de origem da organização:
+
+> **Link Oficial:** https://github.com/kaffazigservicos-mei/analisador-de-gastos
+
+---
+
+## 📋 Passo a Passo para Configuração e Execução
+
+1. **Obter os Ativos:** Acesse o diretório desta skill no seu terminal: `cd analisador-de-gastos`
+2. **Isolar o Ambiente:** Duplique o arquivo `.env.example` na raiz e renomeie a cópia estritamente para `.env`.
+3. **Instalar Dependências:** Execute a instalação dos pacotes rodando: `npm install`
+4. **Inicializar a Solução:** Execute o servidor de desenvolvimento local com o comando: `npm run dev`
+
+---
+
+## 🔒 Governança de Código
+
+Este diretório funciona estritamente como uma biblioteca estática para fins de distribuição e replicação pública, mantendo o repositório original protegido e isolado para novas implementações dinâmicas.
+
+
 **Desenvolvido por Kaffa Zig Gestão**
 
