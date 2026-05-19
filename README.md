@@ -215,5 +215,49 @@ VITE_ENVIRONMENT=production
 Este repositório atua como uma biblioteca estática de distribuição pública. O desenvolvimento incremental e as atualizações de engenharia avançadas continuam sendo executados de forma contínua e dinâmica na plataforma Lovable. Caso deseje customizar o comportamento desta skill para o seu modelo de negócios, encorajamos a criação de uma ramificação (*branch*) própria ou o desenvolvimento de melhorias locais a partir deste marco regulatório.
 
 
+# Finance Helper — Skill Replicável
+
+Este diretório contém a linha de base (*baseline*) e o instantâneo (*snapshot*) estrutural do projeto **Finance Helper**. Esta versão foi isolada e configurada como uma habilidade independente para que terceiros possam replicar, implantar e utilizar o simulador financeiro de forma autônoma.
+
+---
+
+## 🎯 Objetivo do Aplicativo
+
+O **Finance Helper** é um simulador financeiro dinâmico desenvolvido para auxiliar na modelagem, projeção e análise de cenários econômicos. A ferramenta processa dados inseridos pelo usuário em tempo real, fornecendo cálculos precisos e indicadores visuais para dar suporte à tomada de decisões estratégicas e ao planejamento financeiro de forma intuitiva e acessível.
+
+---
+
+## 🌐 Endereço de Acesso
+
+A versão de produção homologada, ativa e pronta para uso deste simulador está hospedada publicamente através do link:
+
+> **Link Oficial:** https://kaffazigservicos-mei.github.io/financehelper
+
+---
+
+## 🛠️ Pré-requisitos para Implantação
+
+Antes de inicializar esta skill em seu ambiente local ou servidor, certifique-se de possuir instalado:
+
+* **Node.js** (Versão LTS recomendada)
+* Gerenciador de pacotes **npm** ou **Yarn**
+
+---
+
+## 📋 Passo a Passo para Configuração e Execução
+
+Siga a sequência metodológica abaixo para implantar a aplicação de maneira isolada:
+
+1. **Obter os Ativos:** Acesse o diretório desta skill no terminal: `cd financehelper`
+2. **Isolar o Ambiente:** Duplique o arquivo `.env.example` e renomeie a cópia estritamente para `.env`.
+3. **Parametrizar Chaves:** Abra o arquivo `.env` e insira as suas respectivas variáveis ou chaves de API, caso aplicável.
+4. **Instalar Dependências:** Instale a árvore de pacotes requerida executando: `npm install`
+5. **Inicializar a Solução:** Rode o servidor de desenvolvimento local com o comando: `npm run dev`
+
+---
+
+## 🔒 Governança de Código
+
+Este diretório funciona como uma biblioteca estática para distribuição e replicação. O ambiente de produção ativo no GitHub Pages permanece isolado e protegido, garantindo a integridade operacional da solução principal de simulação.
 **Desenvolvido por Kaffa Zig Gestão**
 
