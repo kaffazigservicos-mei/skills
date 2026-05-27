@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           id: string
           nome: string
+          recorrente: boolean
           whatsapp: string | null
         }
         Insert: {
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string
           id?: string
           nome: string
+          recorrente?: boolean
           whatsapp?: string | null
         }
         Update: {
@@ -34,6 +36,7 @@ export type Database = {
           created_at?: string
           id?: string
           nome?: string
+          recorrente?: boolean
           whatsapp?: string | null
         }
         Relationships: []
@@ -71,12 +74,85 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_clicks: {
+        Row: {
+          created_at: string
+          id: string
+          profissional_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profissional_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profissional_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_list_clicks: {
+        Args: never
+        Returns: {
+          created_at: string
+          profissional_id: string
+        }[]
+      }
+      admin_list_clients: {
+        Args: never
+        Returns: {
+          cep: string
+          created_at: string
+          id: string
+          nome: string
+          recorrente: boolean
+          whatsapp: string
+        }[]
+      }
+      admin_list_professionals: {
+        Args: never
+        Returns: {
+          cep: string
+          cpf_cft: string
+          created_at: string
+          especialidades: string[]
+          id: string
+          nome_completo: string
+          status_validacao: string
+          whatsapp: string
+        }[]
+      }
+      admin_set_status: {
+        Args: { _id: string; _status: string }
+        Returns: undefined
+      }
+      check_professional_exists: {
+        Args: { _cpf_cft: string }
+        Returns: {
+          exists_flag: boolean
+          status: string
+        }[]
+      }
+      register_client_lead: {
+        Args: { _cep: string; _nome: string; _whatsapp: string }
+        Returns: boolean
+      }
+      search_verified_professionals: {
+        Args: { cep_prefix: string; especialidade?: string }
+        Returns: {
+          cep: string
+          especialidades: string[]
+          id: string
+          nome_completo: string
+          whatsapp: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,48 +1,23 @@
-import { Home, FileText, MessageCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-
-const navItems = [
-  { icon: Home, label: "Início", path: "/home", color: "text-primary" },
-  { icon: FileText, label: "Solicitações", path: "/solicitacoes", color: "text-secondary-foreground" },
-  { icon: MessageCircle, label: "Chat", path: "/chat", color: "text-accent-foreground" },
-];
 
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Hide nav on entry page and tech registration
-  const hidden = ["/", "/perfil", "/cadastro-tecnico"];
+  const hidden = ["/", "/perfil", "/cadastro-tecnico", "/home", "/admin"];
   if (hidden.includes(location.pathname)) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border pb-safe">
-      <div className="max-w-md mx-auto flex items-center justify-around py-2">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${
-                isActive
-                  ? `${item.color}`
-                  : "text-muted-foreground hover:text-on-surface"
-              }`}
-            >
-              <div className={`p-2 rounded-2xl transition-all ${
-                isActive
-                  ? "bg-accent shadow-lg shadow-primary/15"
-                  : "hover:bg-accent/50"
-              }`}>
-                <item.icon size={26} strokeWidth={isActive ? 2.5 : 2} />
-              </div>
-              <span className={`text-[11px] ${isActive ? "font-bold" : "font-medium"}`}>
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
+    <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl bg-card/70 border-t border-white/30 pb-safe">
+      <div className="max-w-md mx-auto flex items-center justify-center py-3">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-primary/10 hover:bg-primary/20 transition-all text-primary font-bold shadow-md shadow-primary/10"
+        >
+          <ArrowLeft size={22} strokeWidth={2.5} />
+          <span className="text-sm">Voltar</span>
+        </button>
       </div>
     </nav>
   );

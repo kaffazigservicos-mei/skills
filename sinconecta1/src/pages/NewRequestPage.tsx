@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MapPin, Search, Sun, Wrench, Plug, Building2, MessageCircle, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LogoMark from "@/components/LogoMark";
-import BackToEntry from "@/components/BackToEntry";
+
 import GlowBackground from "@/components/GlowBackground";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -45,32 +45,25 @@ const NewRequestPage = () => {
       const cepDigits = onlyDigits(cep);
       const cepPrefix = cepDigits.slice(0, 5);
 
-      // Save client data
-      await supabase.from("clientes").insert({
-        nome: nome.trim(),
-        cep: cep.trim(),
-        whatsapp: onlyDigits(whatsapp),
+      // Save client lead (and detect recurrence by WhatsApp)
+      const { data: recurrent } = await supabase.rpc("register_client_lead", {
+        _nome: nome.trim(),
+        _whatsapp: onlyDigits(whatsapp),
+        _cep: cep.trim(),
       });
-
-      let query = supabase
-        .from("profissionais")
-        .select("id, nome_completo, whatsapp, cep, especialidades")
-        .eq("status_validacao", "verificado");
-
-      if (especialidade) {
-        query = query.contains("especialidades", [especialidade]);
+      if (recurrent) {
+        toast.success("Bem-vindo de volta! Identificamos seu contato como Cliente Recorrente.");
       }
 
-      const { data, error } = await query;
+      // Search only verified professionals via secure RPC
+      const { data, error } = await supabase.rpc("search_verified_professionals", {
+        cep_prefix: cepPrefix,
+        especialidade: especialidade || null,
+      });
       if (error) throw error;
 
-      const filtered = (data || []).filter((t) => {
-        if (!t.cep) return false;
-        return onlyDigits(t.cep).startsWith(cepPrefix);
-      });
-
       // Shuffle results to ensure equity (random order each search)
-      const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+      const shuffled = [...(data || [])].sort(() => Math.random() - 0.5);
 
       setResults(shuffled);
       if (shuffled.length === 0) {
@@ -83,9 +76,12 @@ const NewRequestPage = () => {
     }
   };
 
-  const openWhatsApp = (whatsapp: string) => {
-    const num = onlyDigits(whatsapp);
+  const openWhatsApp = (tec: Tecnico) => {
+    if (!tec.whatsapp) return;
+    const num = onlyDigits(tec.whatsapp);
     const msg = encodeURIComponent("Olá, vi seu perfil no SIN Conecta e preciso de suporte.");
+    // Fire-and-forget click tracking (não bloqueia abertura do WhatsApp)
+    void supabase.from("whatsapp_clicks").insert({ profissional_id: tec.id });
     window.open(`https://wa.me/${num}?text=${msg}`, "_blank");
   };
 
@@ -93,19 +89,39 @@ const NewRequestPage = () => {
     <div className="relative min-h-screen pb-24 overflow-hidden">
       <GlowBackground />
       <div className="relative z-10 max-w-md mx-auto px-5 pt-6">
-        <div className="flex items-center gap-3 mb-6">
-          <BackToEntry />
-          <LogoMark size="sm" />
+        <div className="flex flex-col items-center gap-3 mb-6">
+          <LogoMark size="xl" />
         </div>
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl font-extrabold text-on-surface mb-2">
+          <h1 className="text-3xl font-extrabold text-on-surface mb-2 text-center">
             Encontre um <span className="text-primary">técnico</span> próximo
           </h1>
-          <p className="text-base text-on-surface/70 mb-6 font-semibold">
-            Informe seu CEP e (obrigatório) a especialidade desejada.
+          <p className="text-base text-on-surface/70 mb-6 font-semibold text-center">
+            Preencha seus dados e a especialidade desejada.
           </p>
         </motion.div>
+
+        {/* Tabela de preços de referência */}
+        <div className="card-elevated p-5 mb-5 border-2 border-primary/15">
+          <h3 className="text-base font-extrabold text-on-surface mb-3 flex items-center gap-2">
+            <span>💡</span> Tabela de Referência
+          </h3>
+          {[
+            { name: "Elétrica Básica", price: "R$ 150,00" },
+            { name: "Quadros Elétricos", price: "R$ 250,00" },
+            { name: "Padrão de Entrada", price: "R$ 500,00" },
+          ].map((item) => (
+            <div key={item.name} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+              <span className="text-sm font-semibold text-on-surface/70">{item.name}</span>
+              <span className="text-base font-extrabold text-primary">{item.price}</span>
+            </div>
+          ))}
+          <p className="text-xs text-on-surface/60 font-semibold mt-3">
+            ⚡ O valor da visita técnica é abatido no fechamento do serviço.
+          </p>
+        </div>
+
 
         {/* CEP */}
         <div className="card-elevated p-5 mb-5 space-y-4 border-2 border-border">
@@ -186,7 +202,7 @@ const NewRequestPage = () => {
                 key={tec.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="card-elevated p-5 border-2 border-border"
+                className="rounded-2xl p-5 bg-card/70 backdrop-blur-xl border border-primary/15 shadow-[0_10px_40px_-12px_rgba(0,61,155,0.25)]"
               >
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-12 h-12 rounded-2xl primary-gradient flex items-center justify-center text-primary-foreground font-extrabold text-lg shadow-lg shadow-primary/20 flex-shrink-0">
@@ -212,7 +228,7 @@ const NewRequestPage = () => {
                   size="lg"
                   className="w-full bg-[#25D366] hover:bg-[#1eb955] text-white h-12"
                   disabled={!tec.whatsapp}
-                  onClick={() => tec.whatsapp && openWhatsApp(tec.whatsapp)}
+                  onClick={() => openWhatsApp(tec)}
                 >
                   <MessageCircle size={18} />
                   Falar no WhatsApp

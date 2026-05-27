@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import BottomNav from "@/components/BottomNav";
 import SplashPage from "./pages/SplashPage";
+import WelcomePage from "./pages/WelcomePage";
 import EntryPage from "./pages/EntryPage";
 import HomePage from "./pages/HomePage";
 import NewRequestPage from "./pages/NewRequestPage";
@@ -24,6 +25,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<SplashPage />} />
+          <Route path="/boas-vindas" element={<WelcomePage />} />
           <Route path="/perfil" element={<EntryPage />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/solicitacoes" element={<RequestsPage />} />

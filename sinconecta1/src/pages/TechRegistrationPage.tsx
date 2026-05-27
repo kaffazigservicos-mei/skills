@@ -26,6 +26,7 @@ const TechRegistrationPage = () => {
   const [idPhoto, setIdPhoto] = useState<File | null>(null);
   const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const cftPhotoRef = useRef<HTMLInputElement>(null);
   const idPhotoRef = useRef<HTMLInputElement>(null);
@@ -50,13 +51,14 @@ const TechRegistrationPage = () => {
 
     try {
       const cpfCft = cft.trim() || cpf.trim();
-      const { data: existing } = await supabase
-        .from("profissionais")
-        .select("id")
-        .ilike("cpf_cft", cpfCft)
-        .limit(1);
 
-      if (existing && existing.length > 0) {
+      const { data: existing, error: checkError } = await supabase.rpc("check_professional_exists", {
+        _cpf_cft: cpfCft,
+      });
+
+      if (checkError) throw checkError;
+
+      if (existing && existing.length > 0 && existing[0].exists_flag) {
         toast.error("Este CPF/CFT já está cadastrado. Seu perfil está em análise ou já foi aprovado.");
         setLoading(false);
         return;
@@ -71,18 +73,48 @@ const TechRegistrationPage = () => {
         status_validacao: "pendente",
       });
 
-      if (error) throw error;
+      if (error) {
+        if ((error as { code?: string }).code === "23505") {
+          toast.error("Este CPF/CFT já está cadastrado.");
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
-      toast.success(
-        "Dados enviados com sucesso! Nossa equipe técnica realizará a validação manual do seu registro CFT e documentação. Você receberá uma notificação assim que seu perfil for ativado.",
-        { duration: 8000 }
-      );
-    } catch {
+      setSubmitted(true);
+      toast.success("Inscrição enviada com sucesso!");
+    } catch (err) {
+      console.error("Erro cadastro técnico:", err);
       toast.error("Erro ao cadastrar. Tente novamente.");
     } finally {
       setLoading(false);
     }
   };
+
+  if (submitted) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center px-5 overflow-hidden">
+        <GlowBackground />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative z-10 max-w-md w-full p-8 rounded-[2rem] bg-card/70 backdrop-blur-2xl border border-white/40 shadow-[0_20px_60px_-15px_rgba(0,61,155,0.35)] text-center"
+        >
+          <div className="w-20 h-20 mx-auto mb-5 rounded-full primary-gradient flex items-center justify-center shadow-xl shadow-primary/30">
+            <svg viewBox="0 0 24 24" fill="none" className="w-10 h-10 text-primary-foreground" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <h2 className="text-2xl font-extrabold text-on-surface mb-3">Inscrição realizada com sucesso!</h2>
+          <p className="text-base text-on-surface/80 font-semibold leading-relaxed">
+            Seus dados estão em fase de análise. Você receberá uma notificação assim que tudo for validado pela equipe <span className="text-primary font-extrabold">SINCONECTA</span>.
+          </p>
+          <Button variant="hero" size="lg" className="w-full mt-6" onClick={() => window.location.assign("/home")}>
+            Voltar ao início
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen pb-24 overflow-hidden">
